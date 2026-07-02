@@ -1,0 +1,1 @@
+{"name": "cifar10", "classes": ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"], "n": 1000, "hidden": 1000, "n_layers": 4, "epochs": [0, 20, 40, 60, 80, 100], "sprite": {"cols": 40, "rows": 25, "tw": 32, "th": 32}, "final_acc": 0.476}

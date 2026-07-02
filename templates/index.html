@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroScope · Hidden Activity of ANNs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" width="34" height="34">
+        <circle cx="8" cy="20" r="3.4"/><circle cx="20" cy="9" r="3.4"/>
+        <circle cx="20" cy="31" r="3.4"/><circle cx="32" cy="14" r="3.4"/><circle cx="32" cy="26" r="3.4"/>
+        <path d="M8 20 L20 9 M8 20 L20 31 M20 9 L32 14 M20 9 L32 26 M20 31 L32 14 M20 31 L32 26"/>
+      </svg>
+      <div class="brand-txt">
+        <h1>NeuroScope</h1>
+        <span>Hidden Activity of Artificial Neural Networks</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="ds-picker">
+        <label>Dataset</label>
+        <select id="dataset">
+          {% for d in datasets %}<option value="{{ d }}">{{ d|upper }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- ===== Left rail ===== -->
+    <aside class="sidebar">
+      <div class="mode-toggle">
+        <button id="mode-t1" class="mode-btn active">T1 · Épocas</button>
+        <button id="mode-t2" class="mode-btn">T2 · Capas</button>
+      </div>
+      <p id="mode-desc" class="mode-desc"></p>
+
+      <div class="panel">
+        <div class="panel-head"><span id="stage-label">Etapa</span><span id="nh-badge" class="badge">NH —</span></div>
+        <input type="range" id="stage-slider" min="0" max="0" value="0" step="1">
+        <div class="stage-ticks" id="stage-ticks"></div>
+        <div class="play-row"><button id="play-btn" class="btn-primary">▶ Animar evolución</button></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><span>Herramientas</span></div>
+        <div class="tool-toggle">
+          <button id="tool-pan" class="tool-btn active">✋ Pan/Zoom</button>
+          <button id="tool-lasso" class="tool-btn">◌ Lazo</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="show-hulls"> Agrupar por clase (hulls)</label>
+        <label class="chk"><input type="checkbox" id="show-mis"> Resaltar mal clasificados</label>
+        <label class="chk"><input type="checkbox" id="show-trails"> Trayectorias (bundling)</label>
+        <div class="play-row">
+          <button id="clear-sel" class="btn-ghost">✕ Selección</button>
+          <button id="reset-view" class="btn-ghost">⤢ Reset</button>
+        </div>
+      </div>
+
+      <div class="panel legend-panel">
+        <div class="panel-head"><span>Clases reales</span><button id="legend-all" class="mini">limpiar</button></div>
+        <p class="hint">clic = ver estadísticas · shift+clic = ocultar</p>
+        <div id="legend" class="legend"></div>
+      </div>
+
+      <div class="panel info-panel">
+        <div class="info-row"><span>Modelo</span><b id="model-info">—</b></div>
+        <div class="info-row"><span>Precisión test</span><b id="acc-info">—</b></div>
+        <div class="info-row"><span>Selección</span><b id="sel-info">— (todas)</b></div>
+      </div>
+    </aside>
+
+    <!-- ===== Center ===== -->
+    <main class="stage-area">
+      <div class="stage-head">
+        <h2 id="big-title">—</h2>
+        <span id="brightness-key" class="bkey"></span>
+      </div>
+      <div id="chart-wrap">
+        <svg id="chart"></svg>
+        <div id="tooltip" class="tooltip hidden"></div>
+        <div id="lasso-hint" class="lasso-hint hidden">Dibuja un lazo para seleccionar…</div>
+      </div>
+
+      <div class="analytics">
+        <div class="acard">
+          <div class="acard-head">Evolución de la calidad <span id="line-scope" class="scope"></span></div>
+          <svg id="line-chart"></svg>
+        </div>
+        <div class="acard">
+          <div class="acard-head">Matriz de confusión <span id="cm-scope" class="scope"></span></div>
+          <svg id="cm-chart"></svg>
+        </div>
+        <div class="acard">
+          <div class="acard-head">Recall por clase <span id="bar-scope" class="scope"></span></div>
+          <svg id="bar-chart"></svg>
+        </div>
+      </div>
+    </main>
+
+    <!-- ===== Right ===== -->
+    <aside class="filmstrip">
+      <h3>Secuencia <span id="strip-kind"></span></h3>
+      <div id="strip"></div>
+    </aside>
+  </div>
+
+  <!-- ===== Squares (full width) ===== -->
+  <section class="squares-section">
+    <div class="sq-head">
+      <div>
+        <h3>Distribución de scores por clase <span class="sq-sub">(estilo Squares — Ren et al.)</span></h3>
+        <p class="hint" id="sq-desc"></p>
+      </div>
+      <div class="sq-legend">
+        <span><i class="sw-solid"></i> correcto</span>
+        <span><i class="sw-stripe"></i> mal clasificado (color = clase real)</span>
+        <span class="sq-tip">clic en una clase → resalta sus instancias</span>
+      </div>
+    </div>
+    <svg id="squares"></svg>
+  </section>
+
+  <script>window.DATASETS = {{ datasets|tojson }};</script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

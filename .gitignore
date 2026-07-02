@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+gen/_torch_data/
+gen/*.log
+.venv/
+venv/
