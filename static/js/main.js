@@ -28,7 +28,7 @@ const clsShort = c => { const n=clsName(c); return n.length>4? n.slice(0,3):n; }
 async function loadDataset(ds){
   state.ds=ds; state.selected.clear(); state.hidden.clear();
   const [meta,t1,t2]=await Promise.all([
-    d3.json(`/data/${ds}_meta.json`),d3.json(`/data/${ds}_t1.json`),d3.json(`/data/${ds}_t2.json`)]);
+    d3.json(`static/data/${ds}_meta.json`),d3.json(`static/data/${ds}_t1.json`),d3.json(`static/data/${ds}_t2.json`)]);
   state.meta=meta; state.t1=t1; state.t2=t2; state.stageIdx=stages().length-1;
   document.getElementById("model-info").textContent=`MLP ${meta.n_layers}×${meta.hidden} ReLU`;
   document.getElementById("acc-info").textContent=(meta.final_acc*100).toFixed(2)+"%";
@@ -222,7 +222,7 @@ function pointInPoly(px,py,poly){ let inside=false;
 
 /* ---------- tooltip ---------- */
 function spriteStyle(i){ const sp=state.meta.sprite,col=i%sp.cols,row=(i/sp.cols|0),scale=66/sp.th;
-  return {backgroundImage:`url(/data/${state.ds}_sprite.png)`,
+  return {backgroundImage:`url(static/data/${state.ds}_sprite.png)`,
     backgroundPosition:`-${col*sp.tw*scale}px -${row*sp.th*scale}px`,
     backgroundSize:`${sp.cols*sp.tw*scale}px ${sp.rows*sp.th*scale}px`}; }
 function showTip(e,d){
